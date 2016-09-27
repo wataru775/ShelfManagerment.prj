@@ -1,0 +1,26 @@
+    table.shelf{
+            width: 100%;
+    }
+    table.shelf tr.title{
+            background-color:#4F392F;
+            color: #eeeeee;
+    }
+
+    table.shelf tr.author{
+            background-color:#E0C184;
+    }
+    table.shelf tr.series{
+            background-color:#E1C792;
+    }
+    table.shelf tr.s_code{
+            background-color:#E1CB9E;
+    }
+    table.shelf tr.publisher{
+            background-color:#E1CFA9;
+    }
+    table.shelf tr.release_date{
+            background-color:#E1D3B4;
+    }
+    table.shelf tr.barcode{
+            background-color:#E1D7BF;
+    }

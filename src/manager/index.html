@@ -1,0 +1,361 @@
+<html>
+    <head>
+        <title>書籍管理 - 編集 -</title>
+        <meta charset="utf-8">
+        <style type="text/css">
+            thead tr{
+                background-color: #ee77ee;
+            }
+            table#list tbody tr:nth-child(even) { 
+                background-color:#F0F0F6; 
+            }
+            table#list tbody tr:nth-child(odd) { 
+                background-color:#ffffee; 
+            }
+            table#list tbody tr:hover { 
+                background-color:#ffff00; 
+            }
+            table.editform td input[type="text"] {
+                width:256px;
+            }
+        </style>
+        <script type="text/javascript" >
+            function getXmlHttpRequest() {
+                var xmlHttp = null;
+                try {
+                    // Firefox, Opera 8.0+, Safari
+                    xmlHttp = new XMLHttpRequest();
+                } catch (e) {
+                    // Internet Explorer
+                    try {
+                        xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+                    } catch (e) {
+                        xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                }
+                return xmlHttp;
+            }
+
+            function setTitle(title) {
+                editform.title.value = title;
+            }
+            function setAuthor(author) {
+                editform.author.value = author;
+            }
+            function setPublisher(publisher) {
+                editform.publisher.value = publisher;
+            }
+            function setReleaseDate(release_date) {
+                editform.release_date.value = release_date;
+            }
+            function setAmazonImage(amazon_image) {
+                editform.amazon_image.value = amazon_image;
+            }
+            function setAmazonID(amazon_id) {
+                editform.amazon_id.value = amazon_id;
+            }
+            function setBarcode(barcode) {
+                editform.barcode.value = barcode;
+            }
+
+            function clearBook() {
+                editform.id.value = "";
+                editform.title.value = "";
+                editform.author.value = "";
+                editform.barcode.value = "";
+                editform.publisher.value = "";
+                editform.magazine.value = "";
+                editform.m_code.value = "";
+                editform.release_date.value = "";
+                editform.amazon_image.value = "";
+                editform.amazon_id.value = "";
+            }
+
+            /**
+             * バーコードの[検索]ボタンのアクション
+             */
+            function search(barcode) {
+                if (barcode == '') {
+                    return false;
+                }
+                clearBook();
+                clearAmazon();
+                setBarcode(barcode);
+                searchBook(barcode);
+                searchAmazon(barcode);
+                return false;
+            }
+            /**
+             * 画像表示ボタンのアクション
+             */
+            function showImage(url) {
+                if (url == '') {
+                    return;
+                }
+                window.open(url, '表紙画像');
+            }
+
+            function changeBook() {
+                if (bookAjaxHttpRequest.readyState == 4) {
+                    var obj = JSON.parse(bookAjaxHttpRequest.responseText);
+                    if (!obj)
+                        return;
+                    if(obj.IsValid == "FALSE"){
+                        alert(obj.ERROR);
+                        return;
+                    }
+                    if(obj.RESULT.length != 1){
+                        // TODO 結果が複数ある場合
+                        alert("あり得ないはず");
+                        return ;
+                    }
+                    object = obj.RESULT[0];
+                    editform.id.value = object.id;
+                    editform.title.value = object.title;
+                    editform.author.value = object.author;
+                    editform.barcode.value = object.barcode;
+                    editform.publisher.value = object.publisher;
+                    editform.magazine.value = object.magazine;
+                    editform.m_code.value = object.m_code;
+                    editform.release_date.value = object.release_date;
+                    editform.amazon_image.value = object.amazon_image;
+                    editform.amazon_id.value = object.amazon_id;
+
+                }
+            }
+            function searchBook(barcode) {
+                bookAjaxHttpRequest = getXmlHttpRequest();
+                if (bookAjaxHttpRequest == null) {
+                    alert("Your browser does not support AJAX!");
+                    return;
+                }
+                var url = "../select_book.json?isbn=" + barcode;
+                bookAjaxHttpRequest.onreadystatechange = changeBook;
+                bookAjaxHttpRequest.open("GET", url, true);
+                bookAjaxHttpRequest.send(null);
+
+            }
+            function commitBook() {
+                bookAjaxHttpRequest = getXmlHttpRequest();
+                if (bookAjaxHttpRequest == null) {
+                    alert("Your browser does not support AJAX!");
+                    return;
+                }
+
+                var form = document.forms.namedItem("editform");
+
+                var url = "../commit_book.json";
+                bookAjaxHttpRequest.onreadystatechange = commitResult;
+                bookAjaxHttpRequest.open("POST", url, true);
+                bookAjaxHttpRequest.send(new FormData(form));
+
+            }
+            function commitResult() {
+                if (bookAjaxHttpRequest.readyState == 4) {
+                    var obj = JSON.parse(bookAjaxHttpRequest.responseText);
+                    if (obj.ERROR) {
+
+                        alert("更新中にエラーが発生しました\n MSG : " + obj.ERROR + "\n SQL : " + obj.SQL);
+                        return;
+                    }
+
+                    searchBook(editform.barcode.value);
+                    alert("更新が完了しました。");
+                }
+            }
+
+            function changeAmazon() {
+                if (amazonHttp.readyState == 4) {
+                    // document.getElementById("Amazon_Area").innerHTML=xmlHttp.responseText;
+                    var obj = JSON.parse(amazonHttp.responseText);
+//			console.log( obj );
+                    if(obj.IsValid != "FALSE"){
+                        amazonform.image_url.src = obj.RESULT.image_url;
+                        amazonform.title.value = obj.RESULT.title;
+                        amazonform.publisher.value = obj.RESULT.publisher;
+                        amazonform.releaseDate.value = obj.RESULT.pubdate;
+                        amazonform.asin.value = obj.RESULT.asin;
+
+                        amazonform.author.value = createAuthorData(obj.RESULT.authors);
+
+                        if (amazonform.image_url.src == "") {
+                            clickNotFoundImage();
+                        }
+                    }else{
+                        alert(obj.ERROR);
+                    }
+                }
+            }
+            function clearAmazon(){
+                clickNotFoundImage();
+                amazonform.title.value = "";
+                amazonform.publisher.value = "";
+                amazonform.releaseDate.value = "";
+                amazonform.asin.value = "";
+
+                amazonform.author.value = "";
+            }
+            function searchAmazon(isbn) {
+                amazonHttp = getXmlHttpRequest();
+                if (amazonHttp == null) {
+                    alert("Your browser does not support AJAX!");
+                    return;
+                }
+                var url = "/service/aws_ecs/item_lookup.json";
+                url = url + "?isbn=" + isbn;
+                amazonHttp.onreadystatechange = changeAmazon;
+                amazonHttp.open("GET", url, true);
+                amazonHttp.send(null);
+            }
+
+            function createAuthorData(authors) {
+                var author = "";
+                for (i = 0; i < authors.length; i++) {
+                    if (authors[i].role == '')
+                        role = "著";
+                    else
+                        role = authors[i].role;
+                    author = author + authors[i].author + "(" + role + ")";
+
+                    if (i != authors.length - 1)
+                        author = author + ",";
+                }
+
+                return author;
+            }
+
+            /**
+             * 画像無しボタンアクション
+             * @returns {undefined}
+             */
+            function clickNotFoundImage() {
+                amazonform.image_url.src = "/service/bookdb/img/book-notfound.gif";
+            }
+
+        </script>
+    </head>
+    <body>
+        <form name="searchform" action="#" onsubmit="search(this.barcode.value);
+                return false;">
+            <table>
+                <tr>
+                    <th>バーコード</th>
+                    <td>
+                        <input type="text" name="barcode"><input type="submit" value="検索" >
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <table border="1" width="100%">
+            <tr>
+                <td width="50%">
+                    編集フォーム<br>
+                    <form action=""  name="editform" method="POST">
+                        <table class="editform">
+                            <tr>
+                                <th>ID</th>
+                                <td><input name="id" type="text" readonly /></td>
+                            </tr>
+                            <tr>
+                                <th>書籍名</th>
+                                <td><input name="title" type="text" /></td>
+                            </tr>
+                            <tr>
+                                <th>著者</th>
+                                <td><input name="author" type="text" /></td>
+                            </tr>
+                            <tr>
+                                <th>バーコード</th>
+                                <td><input name="barcode" type="text" /></td>
+                            </tr>
+                            <tr>
+                                <th>出版社</th>
+                                <td><input name="publisher" type="text" /></td>
+                            </tr>
+                            <tr>
+                                <th>シリーズ</th>
+                                <td><input name="magazine" type="text" /></td>
+                            </tr>
+                            <tr>
+                                <th>シリーズコード</th>
+                                <td><input name="m_code" type="text" /></td>
+                            </tr>
+                            <tr>
+                                <th>発売日</th>
+                                <td><input name="release_date" type="text" /></td>
+                            </tr>
+                            <tr>
+                                <th>表紙画像url</th>
+                                <td>
+                                    <input name="amazon_image" type="text" />
+                                    <input type="button" onclick="showImage(this.form.amazon_image.value);" value="表示" />
+                                    <input type="button" onclick="clickNotFoundImage();" value="画像無し" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>ASIN</th>
+                                <td><input name="amazon_id" type="text" /></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="text-align:right;">
+                                    <input type="button" value="登録" onclick="commitBook();"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                </td>
+                <td width="50%" style="vertical-align:top;">
+                    amazon<br>
+                    <div id="Amazon_Area" >
+                        <form name="amazonform">
+                            <table width="600" border="0">
+                                <tbody>
+                                    <tr>
+                                        <td width="113" rowspan="6">
+                                            <img name="image_url" height="160" width="113" src="/service/bookdb/img/book-notfound.gif" />
+                                            <input type="button" style="width:100%;" value="コピー" onclick='setAmazonImage(this.form.image_url.src);' />
+                                        </td>
+                                        <td width="5" rowspan="6"> </td>
+                                        <th>書籍名</th>
+                                        <td><input  name="title" size="64" /></td>
+                                        <td><input type="button" value="コピー" onclick='setTitle(this.form.title.value);' /></td>
+                                    </tr>
+                                    <tr>
+                                        <th>著者</th>
+                                        <td><input  name="author" size="64" /></td>
+                                        <td><input type="button" value="コピー" onclick='setAuthor(this.form.author.value);' /></td>
+                                    </tr>
+                                    <tr>
+                                        <th>出版社</th>
+                                        <td><input  name="publisher" size="64" /></td>
+                                        <td><input type="button" value="コピー" onclick='setPublisher(this.form.publisher.value);' /></td>
+                                    </tr>
+                                    <tr>
+                                        <th>発売日</th>
+                                        <td><input  name="releaseDate" size="64" /></td>
+                                        <td><input type="button" value="コピー" onclick='setReleaseDate(this.form.releaseDate.value);' /></td>
+                                    </tr>
+                                    <tr>
+                                        <th nowrap="1">書籍情報</th>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <th>ASIN</th>
+                                        <td><input  name="asin" size="64" /></td>
+                                        <td><input type="button" value="コピー" onclick='setAmazonID(this.form.asin.value);' /></td>
+                                    </tr>
+                                </tbody>
+                            </table>        
+                        </form>
+                    </div>
+                </td>
+        </table>
+        <iframe src="../" style="width:100%;height:450" ></iframe>
+        <!--
+        http://calil.jp/doc/api_ref.html
+        
+        https://ja.wikipedia.org/wiki/Wikipedia:%E6%9B%B8%E7%B1%8D%E6%83%85%E5%A0%B1%E6%BA%90
+        -->
+    </body>
+</html>

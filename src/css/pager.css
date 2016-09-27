@@ -1,0 +1,98 @@
+	.breath{
+		margin-top: 20px;
+	}
+	.pager-display {
+		float: left;
+		height: 32px;
+		line-height: 32px;
+	}
+	.pager-links {
+		float: right;
+		background-color: #fbf7f1;
+		border: 1px solid #e8dccf;
+		border-radius: 2px;
+	}
+	.pager-links li {
+		float: left;
+		height: 30px;
+		margin-right: 1px;
+		margin-left: -1px;
+		border-left: 1px solid #e8dccf;
+		width: 2em;
+	}
+	.pager-links li.see {
+		width: auto;
+	}
+	.pager-links li a {
+		display: inline-block;
+		height: 100%;
+		padding-right: 10px;
+		padding-left: 10px;
+		line-height: 30px;
+	}
+
+	.pager-links li > span {
+		display: inline-block;
+		height: 100%;
+		padding-right: 10px;
+		padding-left: 10px;
+		line-height: 30px;
+	}
+
+	.pager-links li a:hover {
+		background-color: #ffffff;
+		text-decoration: none;
+	}
+
+	.pager-links .current {
+		background-color: #eee6dd;
+		text-decoration: none;
+	}
+
+	.pager-links .decoration-previous-arrow {
+		padding-left: 18px;
+	}
+
+	.pager-links .decoration-next-arrow {
+		padding-right: 18px;
+	}
+
+	.decoration-previous-arrow {
+		position: relative;
+		padding-left: 1em;
+		overflow-x: hidden;
+	}
+
+	.decoration-previous-arrow:before {
+		content: "";
+		position: absolute;
+		top: 50%;
+		left: 5px;
+		width: 0;
+		height: 0;
+		margin-top: -4px;
+		border-color: transparent;
+		border-right-color: #777777;
+		border-style: solid;
+		border-width: 4px;
+	}
+
+	.decoration-next-arrow {
+		position: relative;
+		padding-right: 1em;
+		overflow-x: hidden;
+	}
+
+	.decoration-next-arrow:after {
+		content: "";
+		position: absolute;
+		top: 50%;
+		right: 5px;
+		width: 0;
+		height: 0;
+		margin-top: -4px;
+		border-color: transparent;
+		border-left-color: #777777;
+		border-style: solid;
+		border-width: 4px;
+	}

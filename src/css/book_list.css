@@ -1,0 +1,27 @@
+    table.list {
+        width: 100%;
+    }
+    thead tr{
+        background-color: #7d5526;
+        color: #ffffff !important;
+    }
+    table.list thead th.barcode {
+        width:130px;
+        max-width:130px;
+    }
+    table.list tbody td.barcode {
+        text-align:right; 
+    }
+    table.list tbody tr:nth-child(even) {
+        background-color:#F0F0F6;
+    }
+    table.list tbody tr:nth-child(odd) {
+        background-color:#ffffee; 
+    }
+    table.list tbody tr:hover {
+        background-color:#ffff00; 
+    }
+    table.list tbody td.release_date{
+        width : 8em;
+        text-align:right; 
+    }

@@ -1,0 +1,87 @@
+<?php
+	header('Content-Type: application/json; charset=utf-8');
+	if($_SERVER["REQUEST_METHOD"] != "POST"){
+		echo json_encode(
+			array(
+				"ERROR" => "不正なアクセスです"
+			),JSON_UNESCAPED_UNICODE
+		);
+		return ;
+	}
+//	$_POST = str_replace('"', '"', $_POST);
+//	$_POST = str_replace("'", "'", $_POST);
+	$config = parse_ini_file("system.properties",true);
+	$mysqli = new mysqli($config['database']['server'], $config['database']['user'], $config['database']['password'],$config['database']['database']);
+	$mysqli->set_charset("utf8");
+
+	if (mysqli_connect_errno()) {
+	    die('接続失敗です。'.mysqli_connect_error());
+		echo json_encode(
+			array(
+				"ERROR" => '接続失敗です。'.mysqli_connect_error()
+			),JSON_UNESCAPED_UNICODE
+		);
+		return ;
+	}
+
+	if($_POST['id']){
+
+		$query = 'update RELEASE_INFORMATION ';
+		$query = $query . ' SET ';
+		$query = $query . ' title = "' . $_POST['title'] . '" ,';
+		$query = $query . ' author = "' . $_POST['author'] . '" ,';
+		$query = $query . ' barcode = "' . $_POST['barcode'] . '" ,';
+		$query = $query . ' publisher = "' . $_POST['publisher'] . '" ,';
+		$query = $query . ' magazine = "' . $_POST['magazine'] . '" ,';
+		$query = $query . ' m_code = "' . $_POST['m_code'] . '" ,';
+		$query = $query . ' release_date = "' . $_POST['release_date'] . '" ,';
+		$query = $query . ' amazon_image = "' . $_POST['amazon_image'] . '" ,';
+		$query = $query . ' amazon_id = "' . $_POST['amazon_id'] . '" ';
+
+		$query = $query . " where id = " . $_POST['id'] ;
+	} else {
+		$query = 'INSERT INTO RELEASE_INFORMATION ';
+		$query = $query . ' ( ';
+		$query = $query . ' title ,';
+		$query = $query . ' author  ,';
+		$query = $query . ' barcode  ,';
+		$query = $query . ' publisher  ,';
+		$query = $query . ' magazine  ,';
+		$query = $query . ' m_code  ,';
+		$query = $query . ' release_date ,';
+		$query = $query . ' amazon_image ,';
+		$query = $query . ' amazon_id ';
+		$query = $query . ' ) ';
+		$query = $query . ' VALUES ';
+		$query = $query . ' ( ';
+		$query = $query . ' "' . $_POST['title'] . '" ,';
+		$query = $query . ' "' . $_POST['author'] . '" ,';
+		$query = $query . ' "' . $_POST['barcode'] . '" ,';
+		$query = $query . ' "' . $_POST['publisher'] . '" ,';
+		$query = $query . ' "' . $_POST['magazine'] . '" ,';
+		$query = $query . ' "' . $_POST['m_code'] . '" ,';
+		$query = $query . ' "' . $_POST['release_date'] . '" ,';
+		$query = $query . ' "' . $_POST['amazon_image'] . '" ,';
+		$query = $query . ' "' . $_POST['amazon_id'] . '" ';
+		$query = $query . ' ) ';
+
+	}
+	$result = $mysqli->query($query);
+	$mysqli->close();
+	if ($result === FALSE) {
+		echo json_encode(
+			array(
+				"ERROR" => "Error updating record: " . $mysqli->error ,
+				"SQL" =>  $query
+			),JSON_UNESCAPED_UNICODE
+		);
+		return ;
+	}
+
+	echo json_encode(
+		array(
+			"SUCCESS"
+		),JSON_UNESCAPED_UNICODE
+	);
+
+?>	

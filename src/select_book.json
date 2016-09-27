@@ -1,0 +1,86 @@
+<?php
+    header('Content-Type: application/json; charset=utf-8');
+
+    // クラスを実行する
+    select_book::execute();
+    
+    class select_book {
+        /**
+         * メイン実行メソッド
+         */
+        public static function execute(){
+            // 設定ファイルを読み取ります
+            $config = parse_ini_file("system.properties",true);
+
+            // 処理引数の処理
+            $isbn = $_GET["isbn"];
+            $keyword = $_GET["keyword"];
+            // TODO 入力チェック
+/**
+            if(!$isbn){
+                select_book::printError("引数 : ISBNは必須です");                
+            }
+ 
+ */
+            try{
+                // データベースの接続処理
+                $mysqli = new mysqli($config['database']['server'], $config['database']['user'], $config['database']['password'],$config['database']['database']);
+                $mysqli->set_charset("utf8");
+
+                if (mysqli_connect_errno()) {
+                    $message = '接続失敗です。'.mysqli_connect_error();
+                    select_book::printError($message);
+                }
+            }catch(Exception $e){
+                select_book::printError($e);
+                return;
+            }
+            $query = 'select * from RELEASE_INFORMATION ';
+            if($isbn){
+                $where_query = $where_query . " barcode = '" . $isbn . "'";
+            }
+            if($keyword){
+                    $where_query = " title like '%" . $keyword . "%'";
+                    $where_query = $where_query . " or author like '%" . $keyword . "%'";
+                    $where_query = $where_query . " or magazine like '%" . $keyword . "%'";
+                    $where_query = $where_query . " or m_code like '%" . $keyword . "%'";
+                    $where_query = $where_query . " or publisher like '%" . $keyword . "%'";
+                    $where_query = $where_query . " or release_date like '%" . $keyword . "%'";
+                    $where_query = $where_query . " or barcode like '%" . $keyword . "%'";
+            }
+            if($where_query){
+                $query = $query . " where " . $where_query;
+            }
+            $rows;
+            if ($result = $mysqli->query($query)) {
+		while($row = $result->fetch_assoc()){
+                    $rows[] = $row;
+                }
+                $result->close();
+            }
+            $mysqli->close();
+            if(!$rows){
+                select_book::printError("結果がありません");                
+            }
+
+            echo json_encode(
+                array(
+                    "IsValid" => "TRUE",
+                    "RESULT" => $rows
+                ),JSON_UNESCAPED_UNICODE
+            );
+        }
+        /**
+         * エラーを出力します
+         * @param type $message エラーメッセージ
+         */
+        protected static function printError($message){
+            die( json_encode(
+                array(
+                    "IsValid" => "FALSE",
+                    "ERROR" => $message
+                ),JSON_UNESCAPED_UNICODE
+            ));
+        }      
+    }
+?>

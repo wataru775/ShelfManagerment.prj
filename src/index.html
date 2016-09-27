@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+	<title>書籍管理 - 一覧 -</title>
+	<meta charset="utf-8">
+	<link href="css/pager.css" rel="stylesheet" type="text/css" media="all" />
+ 	<link href="css/book_list.css" rel="stylesheet" type="text/css" media="all" />
+ 	<link href="css/book_shelf.css" rel="stylesheet" type="text/css" media="all" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="js/html_util.js"></script>
+        <script src="js/design_shelf.js"></script>
+        <script src="js/design_list.js"></script>
+        <script src="js/design_accessory.js"></script>
+
+	<style>
+            img.list:hover{
+                    background-color:yellow;
+            }
+	</style>
+        <script >
+            var page_row_size = 20;
+            var page_no = 1;
+            var page_datas ;
+            
+            $(function(){  
+                searchBook();
+            });
+            function getXmlHttpRequest() {
+                var xmlHttp = null;
+                try {
+                    // Firefox, Opera 8.0+, Safari
+                    xmlHttp = new XMLHttpRequest();
+                } catch (e) {
+                    // Internet Explorer
+                    try {
+                        xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+                    } catch (e) {
+                        xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                }
+                return xmlHttp;
+            }
+
+            function changeBook() {
+                if (bookAjaxHttpRequest.readyState == 4) {
+//                    console.log(bookAjaxHttpRequest.responseText);
+                    
+                    var data = JSON.parse(bookAjaxHttpRequest.responseText);
+                    if(data.IsValid == "FALSE"){
+                        alert(data.ERROR);
+                        return;
+                    }
+                                        
+                    console.log(data.RESULT.length);
+                    
+                    page_datas = data.RESULT;
+                    
+                    page_no = 1;
+
+                    updataTable();
+
+                    $("table.list").show();
+                    $("table.shelf").hide();
+
+                }
+            }
+            /**
+             * テーブルデータを更新します
+             * @returns {undefined}
+             */
+            function updataTable(){
+                //HTMLを初期化  
+                $("table.list tbody").html("");  
+                $("table.shelf tbody").html("");  
+
+                var start = (page_no - 1) * page_row_size;
+                var end = start + page_row_size;
+                if(end > page_datas.length){
+                    end = page_datas.length;
+                }
+                for( i = start; i < end ; i ++){
+
+                    updateListRow(page_datas[i]);
+                    if(i%2==0)
+                        updateShelfRow(page_datas[i],page_datas[i+1]);
+                }
+                updataPageInfoTitle(start+1,end,page_datas.length);
+                updatePageNavigation();
+            }
+            function searchBook() {
+                bookAjaxHttpRequest = getXmlHttpRequest();
+                if (bookAjaxHttpRequest == null) {
+                    alert("Your browser does not support AJAX!");
+                    return;
+                }
+                var url = "./select_book.json";
+                bookAjaxHttpRequest.onreadystatechange = changeBook;
+                bookAjaxHttpRequest.open("GET", url, true);
+                bookAjaxHttpRequest.send(null);
+
+            }
+            /**
+             * 
+             * @param {type} keyword
+             * @returns {undefined}
+             */
+            function searchBookWithKeyword(keyword){
+                console.log("keyword : " + keyword);
+                bookAjaxHttpRequest = getXmlHttpRequest();
+                if (bookAjaxHttpRequest == null) {
+                    alert("Your browser does not support AJAX!");
+                    return;
+                }
+                var url = "./select_book.json?keyword="+keyword;
+                bookAjaxHttpRequest.onreadystatechange = changeBook;
+                bookAjaxHttpRequest.open("GET", url, true);
+                bookAjaxHttpRequest.send(null);
+
+            }
+
+        </script>
+    </head>
+    <body>
+	<form>
+		<table>
+			<tr>
+				<td>
+					<input type="text" name="keyword" value="" size="64" style="font-size:32px;font-weight:bold;"/>
+					<input type="button" value="検索" style="background-color: #248 ; color: #fff; padding: 0px 30px; font-size:28px;font-weight:bold;" onclick="searchBookWithKeyword(this.form.keyword.value);return false;"/>
+				</td>
+			</tr>
+		</table>
+	</form>
+	<div style="text-align:right">
+		<button onclick="onclickShowListList(); return false;"><img  src="./img/list.png" /></button>
+		<button onclick="onclickShowShelfList();return false;"><img  src="./img/box.png" /></button>
+	</div>
+	<nav class="pager">
+		<p class="pager-display"></p>
+		<ul class="pager-links" style="list-style: none;"></ul>
+	</nav>
+<!---  // 一覧表示型のデザイン = ここから = --->
+	<table border="1" class="list">
+            <thead>
+                <tr>
+                    <th nowrap="1">書籍名</th>
+                    <th nowrap="1">著者</th>
+                    <th nowrap="1">シリーズ</th>
+                    <th nowrap="1">シリーズコード</th>
+                    <th nowrap="1">出版社</th>
+                    <th nowrap="1">発売日</th>
+                    <th nowrap="1" class="barcode" >バーコード</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+	</table>
+<!---  // 一覧表示型のデザイン = ここまで =  -->
+<!--- // 本棚型のデザイン結果表示           -->
+        <table class="shelf">
+            <tbody></tbody>
+	</table>        
+<!-- // 本棚型のデザイン = ここまで = ?> -->
+</body>
+</html>
