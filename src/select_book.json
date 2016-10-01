@@ -51,7 +51,7 @@
             if($where_query){
                 $query = $query . " where " . $where_query;
             }
-            $rows;
+
             if ($result = $mysqli->query($query)) {
 		while($row = $result->fetch_assoc()){
                     $rows[] = $row;
@@ -63,12 +63,91 @@
                 select_book::printError("結果がありません");                
             }
 
+
+            // 要素をソートします
+            // 著者名 -> 本コード
+            usort($rows, "select_book::sort_book");
+
             echo json_encode(
                 array(
                     "IsValid" => "TRUE",
                     "RESULT" => $rows
                 ),JSON_UNESCAPED_UNICODE
             );
+        }
+        /**
+         * 本情報をソートします
+         * 著者名 -> 本コード
+         * @param type $a
+         * @param type $b
+         * @return type
+         */
+        function sort_book($a, $b) {
+            // 著者が同じであるかの判断
+            $result = strcasecmp($a["author"],$b["author"]);
+            if($result != 0){
+                // 違う場合は著者名ソート
+                return $result;
+            }
+            // 書籍コードでのソート
+            $result =  select_book::comp_mcode($a["m_code"],$b["m_code"]);
+            if($result != 0){
+                return $result;            
+            }
+            // 出版者でソート
+            $result = strcasecmp($a["publisher"],$b["publisher"]);
+            if($result != 0){
+                return $result;            
+            }
+            // 出版者でソート
+            $result = strcasecmp($a["magazine"],$b["magazine"]);
+            if($result != 0){
+                return $result;            
+            }
+            // タイトルでのソート
+            $result = strcasecmp($a["title"],$b["title"]);
+            if($result != 0){
+                return $result;            
+            }
+
+            return strcasecmp($a["release_date"],$b["release_date"]);
+        }
+        /**
+         * 書籍コードの比較クラス
+         * ほ-10-1 vs ほ-10-19
+         * @param type $a
+         * @param type $b
+         * @return int
+         */
+        function comp_mcode($a,$b){
+            $patern = '/[-\s]/';
+            $array_mcode_a = preg_split( $patern,$a);
+            $array_mcode_b = preg_split( $patern,$b);
+            $loop_end_count = count($array_mcode_a);
+            if($loop_end_count < count($array_mcode_b)){
+                $loop_end_count = count($array_mcode_b);
+            }
+            if($loop_end_count == 0){
+                return 0;
+            }
+            for($i = 0 ; $i < $loop_end_count ; $i ++ ){
+                if($array_mcode_a[$i] == $array_mcode_b[$i])
+                    continue;
+                // 文字列 > 数値
+                if(!ctype_digit($array_mcode_a[$i])){
+                    if(ctype_digit($array_mcode_b[$i])){
+                        return 1;
+                    } else if(ctype_digit($array_mcode_b[$i])){
+                        // 文字列判断
+                        return strcasecmp($array_mcode_a[$i],$array_mcode_b[$i]);
+                    }                    
+                    return -1;
+                }
+                
+                return $array_mcode_a[$i] - $array_mcode_b[$i];
+            }
+            return 0;
+
         }
         /**
          * エラーを出力します
